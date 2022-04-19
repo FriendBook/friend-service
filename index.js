@@ -1,10 +1,13 @@
 const express = require('express');
 const app = express();
 const PORT = 8082;
+const cors = require('cors');
+var amqp = require('amqplib/callback_api');
 
-app.use(express.json())
+app.use(express.json());
+app.use(cors());
 
-app.listen(PORT, () => console.log('It\'s alive on: http://localhost:' + PORT))
+app.listen(PORT, () => console.log('Listening on ' + PORT));
 
 let connections = {
     1: [2,3,4,5,6,7,8,9],
@@ -56,3 +59,28 @@ app.delete('/friends/:id/:friendid', (req, res) => {
         return
     }
 })
+
+amqp.connect('amqp://localhost', function(error0, connection) {
+    if (error0) {
+        throw error0;
+    }
+    connection.createChannel(function(error1, channel) {
+        if (error1) {
+            throw error1;
+        }
+
+        var queue = 'hello';
+
+        channel.assertQueue(queue, {
+            durable: false
+        });
+
+        console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", queue);
+
+        channel.consume(queue, function(msg) {
+            console.log(" [x] Received %s", JSON.parse(msg.content.toString()));
+        }, {
+            noAck: true
+        });
+    });
+});

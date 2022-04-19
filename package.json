@@ -18,7 +18,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.3"
+    "amqplib": "^0.8.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.3",
+    "nats": "^2.6.1"
   },
   "devDependencies": {
     "jest": "^27.5.1"
