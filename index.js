@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8082;
 const cors = require("cors");
 var amqp = require("amqplib/callback_api");
-var _ = require('lodash');
+var _ = require("lodash");
 
 app.use(express.json());
 app.use(cors());
@@ -33,48 +33,52 @@ amqp.connect("amqp://localhost", function (error0, connection) {
 
 //Get all friends from a user
 app.get("/friends/:id", (req, res) => {
-  thischannel.assertQueue(
-    "",
-    {
-      exclusive: true,
-    },
-    function (error2, q) {
-      if (error2) {
-        throw error2;
+  amqp.connect("amqp://localhost", function (error0, connection) {
+    if (error0) {
+      throw error0;
+    }
+    connection.createChannel(function (error1, channel) {
+      if (error1) {
+        throw error1;
       }
-      thischannel.sendToQueue("user_queue", Buffer.from("allusers"), {
-        correlationId: "5",
-        replyTo: q.queue,
+
+      var queue = "users";
+
+      channel.assertQueue(queue, {
+        durable: false,
       });
 
-      thischannel.consume(
-        q.queue,
+      console.log(
+        " [*] Waiting for messages in %s. To exit press CTRL+C",
+        queue
+      );
+
+      channel.consume(
+        queue,
         function (msg) {
-          if (msg.properties.correlationId === "5") {
-            var users = JSON.parse(msg.content);
-            console.log(" [.] Got %s", users);
+          var users = JSON.parse(msg.content);
+          console.log(" [.] Got %s", users);
 
-            if (!!connections[req.params.id]) {
-              result = _.clone(connections[req.params.id]);
-              
-              for (i = 0; i < result.length; i++) {
-                result[i] = users[result[i]];
-              }
-
-              res.status(200).send(result);
-              return;
-            } else {
-              throw "The user with ID " + req.params.id + " does not exist.";
-              return;
+          if (!!connections[req.params.id]) {
+            var result = _.clone(connections[req.params.id]);
+            for (i = 0; i < result.length; i++) {
+              result[i] = users[result[i]];
             }
+            console.log(result)
+            res.status(200).send(result);
+            channel.close();
+            return;
+          } else {
+            throw "The user with ID " + req.params.id + " does not exist.";
+            return;
           }
         },
         {
           noAck: true,
         }
       );
-    }
-  );
+    });
+  });
 });
 
 //Check if user has a specific friend
