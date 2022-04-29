@@ -16,21 +16,6 @@ let connections = {
   3: [1, 2],
 };
 
-var thischannel;
-
-amqp.connect("amqp://localhost", function (error0, connection) {
-  if (error0) {
-    throw error0;
-  }
-  connection.createChannel(function (error1, channel) {
-    if (error1) {
-      throw error1;
-    }
-
-    thischannel = channel;
-  });
-});
-
 //Get all friends from a user
 app.get("/friends/:id", (req, res) => {
   amqp.connect("amqp://localhost", function (error0, connection) {
@@ -111,24 +96,3 @@ app.delete("/friends/:id/:friendid", (req, res) => {
     return;
   }
 });
-
-function requestUsers() {}
-
-// channel.sendToQueue("user_queue", Buffer.from("allusers"), {
-//     correlationId: correlationId,
-//     replyTo: q.queue,
-//   });
-
-//   channel.consume(
-//     q.queue,
-//     function (msg) {
-//       if (msg.properties.correlationId === correlationId) {
-//         var users = JSON.parse(msg.content);
-//         console.log(" [.] Got %s", users);
-//         return users;
-//       }
-//     },
-//     {
-//       noAck: true,
-//     }
-//   );
