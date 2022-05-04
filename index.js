@@ -17,7 +17,7 @@ let connections = {
 };
 
 //Get all friends from a user
-app.get("/friends/:id", (req, res) => {
+app.get("/api/frnds/:id", (req, res) => {
   amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
     if (error0) {
       throw error0;
@@ -67,7 +67,7 @@ app.get("/friends/:id", (req, res) => {
 });
 
 //Check if user has a specific friend
-app.get("/friends/:id/:friendid", (req, res) => {
+app.get("/api/frnds/:id/:friendid", (req, res) => {
   if (!!connections[req.params.id]) {
     res
       .status(200)
@@ -79,7 +79,7 @@ app.get("/friends/:id/:friendid", (req, res) => {
   }
 });
 
-app.delete("/friends/:id/:friendid", (req, res) => {
+app.delete("/api/frnds/:id/:friendid", (req, res) => {
   if (!!connections[req.params.id]) {
     if (connections[req.params.id].includes(parseInt(req.params.friendid))) {
       connections[req.params.id].splice(
