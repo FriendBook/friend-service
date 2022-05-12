@@ -52,7 +52,6 @@ app.get("/api/frnds/:id", (req, res) => {
             console.log(result)
             res.status(200).send(result);
             channel.close();
-            return;
           } else {
             throw new Error("The user with ID " + req.params.id + " does not exist.");
           }
@@ -71,7 +70,6 @@ app.get("/api/frnds/:id/:friendid", (req, res) => {
     res
       .status(200)
       .send(connections[req.params.id].includes(parseInt(req.params.friendid)));
-    return;
   } else {
     throw new Error("The user with ID " + req.params.id + " does not exist.");
   }
