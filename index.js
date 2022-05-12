@@ -16,7 +16,6 @@ let connections = {
   3: [1, 2],
 };
 
-//Get all friends from a user
 app.get("/api/frnds/:id", (req, res) => {
   amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
     if (error0) {
@@ -64,7 +63,6 @@ app.get("/api/frnds/:id", (req, res) => {
   });
 });
 
-//Check if user has a specific friend
 app.get("/api/frnds/:id/:friendid", (req, res) => {
   if (!!connections[req.params.id]) {
     res
