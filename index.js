@@ -46,7 +46,7 @@ app.get("/api/frnds/:id", (req, res) => {
 
           if (!!connections[req.params.id]) {
             var result = _.clone(connections[req.params.id]);
-            for (i = 0; i < result.length; i++) {
+            for (let i = 0; i < result.length; i++) {
               result[i] = users[result[i]];
             }
             console.log(result)
@@ -54,8 +54,7 @@ app.get("/api/frnds/:id", (req, res) => {
             channel.close();
             return;
           } else {
-            throw "The user with ID " + req.params.id + " does not exist.";
-            return;
+            throw new Error("The user with ID " + req.params.id + " does not exist.");
           }
         },
         {
@@ -74,8 +73,7 @@ app.get("/api/frnds/:id/:friendid", (req, res) => {
       .send(connections[req.params.id].includes(parseInt(req.params.friendid)));
     return;
   } else {
-    throw "The user with ID " + req.params.id + " does not exist.";
-    return;
+    throw new Error("The user with ID " + req.params.id + " does not exist.");
   }
 });
 
@@ -88,11 +86,9 @@ app.delete("/api/frnds/:id/:friendid", (req, res) => {
       );
       res.status(200).send(connections[req.params.id]);
     } else {
-      throw "The user does not have this person as friend.";
-      return;
+      throw new Error("The user does not have this person as friend.");
     }
   } else {
-    throw "The user with ID " + req.params.id + " does not exist.";
-    return;
+    throw new Error("The user with ID " + req.params.id + " does not exist.");
   }
 });
