@@ -1,10 +1,9 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const express = require("express");
 const app = express();
 const PORT = 8082;
 const cors = require("cors");
 var amqp = require("amqplib/callback_api");
-var _ = require("lodash");
 
 app.use(express.json());
 app.use(cors());
@@ -16,7 +15,7 @@ const uri =
 const client = new MongoClient(uri);
 client.connect();
 
-amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
+amqp.connect("amqp://localhost", function (error0, connection) {
   if (error0) {
     throw error0;
   }
@@ -35,10 +34,11 @@ amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
         var operation = JSON.parse(msg.content);
         switch (operation.type) {
           case "create":
-            client
-              .db("friendbook-friends")
-              .collection("friends")
-              .insertOne({ _id: operation.id, friendlist: [] });
+            client.db("friendbook-friends").collection("friends").insertOne({
+              _id: operation.id,
+              username: operation.name,
+              friendlist: [],
+            });
             break;
           case "update":
             client
@@ -58,7 +58,7 @@ amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
             client
               .db("friendbook-friends")
               .collection("friends")
-              .updateMany({}, {$pull: {friendlist: operation.id}})
+              .updateMany({}, { $pull: { friendlist: operation.id } });
 
             break;
           default:
@@ -72,13 +72,38 @@ amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
   });
 });
 
-//Send friends list from id
-app.get("/api/frnds/all/:id", (req, res) => {
+//Send full friend list from id
+app.get("/api/frnds/:id", (req, res) => {
   client
     .db("friendbook-friends")
     .collection("friends")
     .findOne({ _id: req.params.id })
-    .then((ans) => res.status(200).send(ans.friendlist));
+    .then((result) =>
+      client
+        .db("friendbook-friends")
+        .collection("friends")
+        .find({
+          _id: { $in: result.friendlist },
+        })
+        .toArray(function (err, docs) {
+          if (err) throw err;
+          const aux = [];
+          docs.forEach((element) => {
+            aux.push(element.username);
+          });
+
+          res.status(200).send(aux);
+        })
+    );
+});
+
+//Checks if id is friends with friendid
+app.get("/api/frnds/:id/:friendid", (req, res) => {
+  client
+    .db("friendbook-friends")
+    .collection("friends")
+    .findOne({ _id: req.params.id }).then((ans) => res.status(200).send(ans.friendlist.includes(req.params.friendid)));
+    
 });
 
 //Creates a new user friendlist with user id as param
@@ -86,7 +111,7 @@ app.post("/api/frnds/:id", (req, res) => {
   client
     .db("friendbook-friends")
     .collection("friends")
-    .insertOne({ _id: req.params.id, username: req.body.name, friendlist: [] }) //to change
+    .insertOne({ _id: req.params.id, username: req.body.name, friendlist: [] })
     .then((ans) => res.status(200).send(ans));
 });
 
@@ -114,13 +139,4 @@ app.delete("/api/frnds/:id/:friendid", (req, res) => {
     .then((ans) => res.status(200).send(ans));
 });
 
-//Checks if id is friends with friendid
-app.get("/api/frnds/:id/:friendid", (req, res) => {
-  if (!!connections[req.params.id]) {
-    res
-      .status(200)
-      .send(connections[req.params.id].includes(parseInt(req.params.friendid)));
-  } else {
-    throw new Error("The user with ID " + req.params.id + " does not exist.");
-  }
-});
+
