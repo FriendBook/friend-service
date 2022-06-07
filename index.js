@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 const PORT = 8082;
 const cors = require("cors");
-var amqp = require("amqplib/callback_api");
+const amqp = require("amqplib/callback_api");
 
 app.use(express.json());
 app.use(cors());
@@ -31,7 +31,7 @@ amqp.connect("amqp://rabbitmq:5672", function (error0, connection) {
     channel.consume(
       "friends",
       function (msg) {
-        var operation = JSON.parse(msg.content);
+        const operation = JSON.parse(msg.content);
         switch (operation.type) {
           case "create":
             client.db("friendbook-friends").collection("friends").insertOne({
@@ -113,7 +113,7 @@ app.post("/api/frnds/:id", (req, res) => {
   client
     .db("friendbook-friends")
     .collection("friends")
-    .insertOne({ _id: req.params.id, username: req.body.name, friendlist: [] })
+    .insertOne({ _id: req.params.id.toString(), username: req.body.name.toString(), friendlist: [] })
     .then((ans) => res.status(200).send(ans));
 });
 
